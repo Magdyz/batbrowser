@@ -1,0 +1,12 @@
+# dependencies
+node_modules/
+
+# optional npm cache directory
+.npm
+
+# optional yarn cache directory
+.yarn
+
+# other files to ignore
+dist/
+build/
