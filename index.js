@@ -1,8 +1,18 @@
-const { app, BrowserWindow } = require("electron");
+const { app, nativeImage, BrowserWindow } = require("electron");
 const path = require("path");
 
 // Function to create the browser window
 function createWindow() {
+  const iconPath = path.resolve(__dirname, "images", "icon.png");
+
+  // Create a NativeImage instance from the icon path
+  const appIcon = nativeImage.createFromPath(iconPath);
+
+  // Set the application icon in the dock (for macOS)
+  if (process.platform === "darwin") {
+    app.dock.setIcon(appIcon);
+  }
+
   // Create a new browser window
   const win = new BrowserWindow({
     width: 800,
@@ -17,12 +27,13 @@ function createWindow() {
       allowRunningInsecureContent: false,
       webviewTag: true, // Enable <webview> tag
     },
+    icon: appIcon, // Use the NativeImage instance
   });
 
   // Load the index.html file into the window
   win.loadFile("renderer/index.html");
   // open dev tools
-  // win.webContents.openDevTools();
+  win.webContents.openDevTools();
 }
 
 // Event handler for when Electron has finished initializing
