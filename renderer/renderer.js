@@ -1,6 +1,7 @@
 // Select the input field and button
 const addressBar = document.getElementById("address-bar");
 const goButton = document.getElementById("go-button");
+const clearButton = document.getElementById("clear-button");
 
 // Function to handle navigation securely
 const navigateToUrl = () => {
@@ -77,4 +78,11 @@ addressBar.addEventListener("keypress", (event) => {
 // Event listener for Go button click
 goButton.addEventListener("click", () => {
   navigateToUrl();
+});
+
+// Event listener for Clear button click
+clearButton.addEventListener("click", () => {
+  window.electron.performSessionCleanup().then(() => {
+    console.log("History Cleared");
+  });
 });

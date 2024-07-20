@@ -1,5 +1,6 @@
-const { app, nativeImage, BrowserWindow } = require("electron");
+const { app, nativeImage, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
+const { sessionCleanUp } = require("./utils/sessionUtils");
 
 let win; // Define the window variable in a higher scope
 
@@ -21,8 +22,8 @@ function createWindow() {
     height: 600,
     webPreferences: {
       // Enable Node.js integration in the renderer process
-      nodeIntegration: true,
-      // Disable context isolation (for simplicity; generally, keep this enabled for security)
+      nodeIntegration: false,
+      // Enable context isolation for security
       contextIsolation: true,
       // Path to the preload script
       preload: path.join(__dirname, "preload.js"),
@@ -39,10 +40,21 @@ function createWindow() {
   // Load the index.html file into the window
   win.loadFile("renderer/index.html");
 
+  const ses = win.webContents.session;
+
+  // Set permission request handler
+  ses.setPermissionRequestHandler((webContents, permission, callback) => {
+    if (permission === "notifications") {
+      callback(true); // allow notifications permission
+    } else {
+      callback(false); // Deny all other permissions
+    }
+  });
+
   // Event listener for window close
   win.on("close", (event) => {
     event.preventDefault();
-    sessionCleanUp().then(() => {
+    sessionCleanUp(ses).then(() => {
       win.destroy();
     });
   });
@@ -50,26 +62,6 @@ function createWindow() {
   // open dev tools
   //win.webContents.openDevTools();
 }
-
-const sessionCleanUp = async () => {
-  if (win) {
-    // user agent
-    const ses = win.webContents.session;
-    console.log(ses.getUserAgent());
-
-    try {
-      // Clear cache
-      await ses.clearCache();
-      console.log("Cache cleared");
-
-      // Clear all storage data
-      await ses.clearStorageData();
-      console.log("Storage data cleared");
-    } catch (error) {
-      console.error("Error during session cleanup:", error);
-    }
-  }
-};
 
 // Event handler for when Electron has finished initializing
 app.whenReady().then(createWindow);
@@ -98,4 +90,12 @@ app.on("before-quit", (event) => {
   sessionCleanUp().then(() => {
     app.quit();
   });
+});
+
+// Listen for the session cleanup request from the renderer process
+ipcMain.handle("perform-session-cleanup", async () => {
+  if (win) {
+    const ses = win.webContents.session;
+    await sessionCleanUp(ses);
+  }
 });
