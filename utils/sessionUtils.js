@@ -5,8 +5,19 @@ const sessionCleanUp = async (session) => {
     console.log("Cache cleared");
 
     // Clear all storage data
-    await session.clearStorageData();
-    console.log("Storage data cleared");
+    await session.clearStorageData({
+      storages: [
+        "cookies",
+        "backgroundFetch",
+        "fileSystems",
+        "localstorage",
+        "indexeddb",
+        "websql",
+        "serviceworkers",
+      ],
+      quotas: ["temporary", "persistent"],
+    });
+    console.log("Storage data cleared, storages and quotas");
   } catch (error) {
     console.error("Error during session cleanup:", error);
   }
